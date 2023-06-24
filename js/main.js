@@ -5,6 +5,7 @@ let state = {
   history: [ { squares: Array(9).fill(null) } ],
   stepNumber: 0,
   xIsNext: true,
+  isActiveHistory: false,
 };
 
 /*
@@ -12,7 +13,6 @@ let state = {
  * de la aplicacion y verifica un ganador en ella.
  */
 let calculateWinner = (squares) => {
-  let valueWinner = null;
   let linesWinner = [
     [0, 1, 2],
     [3, 4, 5],
@@ -23,14 +23,11 @@ let calculateWinner = (squares) => {
     [0, 4, 8],
     [2, 4, 6],
   ];
-  linesWinner.forEach((line) => {
-    let [a, b, c] = line;
-    if(squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) { 
-      valueWinner = squares[a];
-      return; 
-    } 
-  })
-  return valueWinner;
+  for(let i = 0; i < linesWinner.length; i++) {
+    let [a, b, c] = linesWinner[i];
+    if(squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) return squares[a];
+  }
+  return null;
 };
 
 /*
@@ -38,6 +35,7 @@ let calculateWinner = (squares) => {
  */
 let square = (props) => {
   let button = document.createElement("button");
+  button.setAttribute("id", props.value);
   button.setAttribute("class", "square");
   button.addEventListener("click", props.onClick);
   button.textContent = props.value;
@@ -97,9 +95,79 @@ let handleClick = (i) => {
  */
 let jumpTo = (step) => {
   state.stepNumber = step;
-  state.xIsNext = (step % 2) === 0;
+  state.isActiveHistory = true;
+  state.xIsNext = false;
   game();
 };
+
+let minimax = (squares) => {
+  let bestUtiliy = -Infinity;
+  let bestAction = null;
+  for(let i = 0; i < squares.length; i++) {
+    if(squares[i] === null) {
+      squares[i] = 'X';
+      let score = minValue(squares);
+      console.log('score', score);
+      squares[i] = null;
+      if(score >= bestUtiliy) {
+        bestUtiliy = score;
+        bestAction = i;
+      }
+    }
+  }
+  console.log("bestmove", bestAction);
+  if(squares[bestAction] === null) squares[bestAction] = 'X';
+  else console.log("Movimiento invalido");
+  return bestAction;
+};
+
+let minValue = (squares) => {
+  let utility = getUtility();
+  if(utility !== null) return utility;
+  let bestUtiliy = Infinity;
+  for(let i = 0; i < squares.length; i++) {
+    if(squares[i] === null) {
+      squares[i] = 'O';
+      let score = maxValue(squares);
+      console.log("maxvalue", score);
+      squares[i] = null;
+      if(score <= bestUtiliy) bestUtiliy = score;
+    }
+  };
+  return bestUtiliy;
+};
+
+let maxValue = (squares) => {
+  let utility = getUtility();
+  if(utility !== null) return utility;
+  let bestUtiliy = -Infinity;
+  for(let i = 0; i < squares.length; i++) {
+    if(squares[i] === null) {
+      squares[i] = 'X';
+      let score = minValue(squares);
+      console.log("minvalue", score);
+      squares[i] = null;
+      if(score >= bestUtiliy) bestUtiliy = score;
+    }
+  };
+  return bestUtiliy;
+};
+
+let getUtility = () => {
+  let winner = calculateWinner(state.history[state.stepNumber].squares)
+  if(winner === 'X') return 1;
+  else if(winner === 'O') return -1;
+  else if(checkDraw()) return 0;
+  return null;
+};
+
+let checkDraw = () => {
+  let squares = state.history[state.stepNumber].squares;
+  for(let i = 0; i < squares.length; i++) {
+    if(squares[i] === null) return false;
+  }
+  return true;
+}
 
 /*
  * Funcion general del juego, es donde se renderiza todos los elementos que contiene
@@ -108,6 +176,11 @@ let jumpTo = (step) => {
 let game = () => {
   let history = state.history;
   let current = history[state.stepNumber];
+  if(state.xIsNext && !state.isActiveHistory) {
+    let move = minimax(current.squares)
+    state.xIsNext = false;
+    state.stepNumber = move;
+  }
   let winner = calculateWinner(current.squares);
 
   let moves = history.map((step, move) => {
