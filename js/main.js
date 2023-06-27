@@ -107,7 +107,6 @@ let minimax = (squares) => {
     if(squares[i] === null) {
       squares[i] = 'X';
       let score = minValue(squares);
-      console.log('score', score);
       squares[i] = null;
       if(score >= bestUtiliy) {
         bestUtiliy = score;
@@ -115,7 +114,6 @@ let minimax = (squares) => {
       }
     }
   }
-  console.log("bestmove", bestAction);
   if(squares[bestAction] === null) squares[bestAction] = 'X';
   else console.log("Movimiento invalido");
   return bestAction;
@@ -129,7 +127,6 @@ let minValue = (squares) => {
     if(squares[i] === null) {
       squares[i] = 'O';
       let score = maxValue(squares);
-      console.log("maxvalue", score);
       squares[i] = null;
       if(score <= bestUtiliy) bestUtiliy = score;
     }
@@ -145,7 +142,6 @@ let maxValue = (squares) => {
     if(squares[i] === null) {
       squares[i] = 'X';
       let score = minValue(squares);
-      console.log("minvalue", score);
       squares[i] = null;
       if(score >= bestUtiliy) bestUtiliy = score;
     }
